@@ -113,9 +113,10 @@ namespace Accelist.AuthGateway.Controllers
             }
             identity.AddClaim(new Claim(Claims.Subject, userInfo.Subject));
 
-            var updatedAtUnix = userInfo.UpdatedAt?.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
-            if (string.IsNullOrEmpty(updatedAtUnix) == false)
+            if (userInfo.UpdatedAt != null)
             {
+                DateTimeOffset updatedAtDto = DateTime.SpecifyKind(userInfo.UpdatedAt.Value, DateTimeKind.Utc);
+                var updatedAtUnix = updatedAtDto.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
                 identity.AddClaim(new Claim(Claims.UpdatedAt, updatedAtUnix, ClaimValueTypes.Integer64));
             }
             if (userInfo.Website != null)

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using OpenIddict.Validation.AspNetCore;
 using System.ComponentModel.DataAnnotations;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -45,13 +46,16 @@ namespace Accelist.AuthGateway.Controllers
         [Required]
         public string Subject { set; get; } = "";
 
-        public DateTimeOffset? UpdatedAt { set; get; }
+        public DateTime? UpdatedAt { set; get; }
 
         public string? Website { set; get; }
 
         public string? ZoneInfo { set; get; }
 
         public bool RememberMe { set; get; }
+
+        [Required]
+        public string LoginChallenge { set; get; } = "";
     }
 
     public class LoginApiResponseModel
@@ -61,7 +65,7 @@ namespace Accelist.AuthGateway.Controllers
 
     [Route("api/login")]
     [ApiController]
-    //[Authorize("policy_scope_identity_managemnt")]
+    [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme, Policy = "IdentityManagement")]
     public class LoginApiController : ControllerBase
     {
         private readonly AuthDbContext DB;
@@ -72,20 +76,18 @@ namespace Accelist.AuthGateway.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<LoginApiResponseModel>> Post(
-            [FromBody] LoginApiRequestModel model,
-            [FromQuery] string login_challenge,
-            CancellationToken cancellationToken)
+        public async Task<ActionResult<LoginApiResponseModel>> Post([FromBody] LoginApiRequestModel model, CancellationToken cancellationToken)
         {
+            var now = DateTime.UtcNow;
             var challenge = await DB.LoginChallenge.Where(Q =>
-                Q.LoginChallengeID == login_challenge
+                Q.LoginChallengeID == model.LoginChallenge
                 && Q.IsValid
-                && DateTimeOffset.UtcNow <= Q.ValidUntil
+                && Q.ValidUntil > now
             ).FirstOrDefaultAsync(cancellationToken);
 
             if (challenge == null)
             {
-                ModelState.AddModelError("login_challenge", "Invalid login challenge!");
+                ModelState.AddModelError("model.LoginChallenge", "Invalid login challenge!");
             }
 
             if (ModelState.IsValid == false)
@@ -97,7 +99,7 @@ namespace Accelist.AuthGateway.Controllers
             {
                 LoginClaimsID = Ulid.NewUlid().ToString(),
                 IsValid = true,
-                ValidUntil = DateTimeOffset.UtcNow.AddMinutes(5),
+                ValidUntil = DateTime.UtcNow.AddMinutes(5),
 
                 Address = model.Address,
                 Birthdate = model.Birthdate,

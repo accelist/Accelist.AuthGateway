@@ -9,7 +9,7 @@ namespace Accelist.AuthGateway.Entities
 
         public bool IsValid { set; get; }
 
-        public DateTimeOffset ValidUntil { set; get; }
+        public DateTime ValidUntil { set; get; }
 
         public string? Address { set; get; }
 
@@ -45,7 +45,7 @@ namespace Accelist.AuthGateway.Entities
 
         public string Subject { set; get; } = "";
 
-        public DateTimeOffset? UpdatedAt { set; get; }
+        public DateTime? UpdatedAt { set; get; }
 
         public string? Website { set; get; }
 

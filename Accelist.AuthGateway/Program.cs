@@ -19,12 +19,12 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-    var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+    var appManager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
     db.Database.Migrate();
 
-    if (await manager.FindByClientIdAsync("back-end") is null)
+    if (await appManager.FindByClientIdAsync("back-end") is null)
     {
-        await manager.CreateAsync(new OpenIddictApplicationDescriptor
+        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
         {
             ClientId = "back-end",
             ClientSecret = "kMh86WtNTV5KZCdgpPYgAPFA8AudZwSm",
@@ -36,13 +36,12 @@ using (var scope = app.Services.CreateScope())
                 Permissions.Endpoints.Revocation,
                 Permissions.GrantTypes.ClientCredentials,
                 Permissions.Prefixes.Scope + "identity-management"
-            },
-            Type = ClientTypes.Confidential
+            }
         });
     }
-    if (await manager.FindByClientIdAsync("front-end") is null)
+    if (await appManager.FindByClientIdAsync("front-end") is null)
     {
-        await manager.CreateAsync(new OpenIddictApplicationDescriptor
+        await appManager.CreateAsync(new OpenIddictApplicationDescriptor
         {
             ClientId = "front-end",
             DisplayName = "Next.js App",
@@ -58,9 +57,38 @@ using (var scope = app.Services.CreateScope())
                 Permissions.GrantTypes.RefreshToken,
                 Permissions.Scopes.Profile,
                 Permissions.Scopes.Email,
+                Permissions.Scopes.Roles,
+                Permissions.Scopes.Phone,
+                Permissions.Scopes.Address,
                 Permissions.Prefixes.Scope + "app"
             },
             Type = ClientTypes.Public
+        });
+    }
+
+    var scopeManager = scope.ServiceProvider.GetRequiredService<IOpenIddictScopeManager>();
+
+    if (await scopeManager.FindByNameAsync("identity-management") is null)
+    {
+        await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+        {
+            Name = "identity-management",
+            Resources =
+            {
+                "back-end"
+            }
+        });
+    }
+
+    if (await scopeManager.FindByNameAsync("app") is null)
+    {
+        await scopeManager.CreateAsync(new OpenIddictScopeDescriptor
+        {
+            Name = "app",
+            Resources =
+            {
+                "back-end"
+            }
         });
     }
 }

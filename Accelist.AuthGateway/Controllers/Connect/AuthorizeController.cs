@@ -12,13 +12,22 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Accelist.AuthGateway.Controllers
+namespace Accelist.AuthGateway.Controllers.Connect
 {
     [Route("connect/authorize")]
     public class AuthorizeController : Controller
     {
+        private readonly IOpenIddictScopeManager ScopeManager;
+
+        public AuthorizeController(IOpenIddictScopeManager scopeManager)
+        {
+            this.ScopeManager = scopeManager;
+        }
+
         [HttpGet]
-        public async Task<IActionResult> Get()
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> Authorize()
         {
             var request = HttpContext.GetOpenIddictServerRequest()!;
 
@@ -26,10 +35,10 @@ namespace Accelist.AuthGateway.Controllers
             // If a max_age parameter was provided, ensure that the cookie is not too old.
             // If the user principal can't be extracted or the cookie is too old, redirect the user to the login page.
             var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            if (result?.Principal == null || !result.Succeeded || (
-                request.MaxAge != null 
-                && result.Properties?.IssuedUtc != null 
-                && DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value))
+            if (result?.Principal == null || !result.Succeeded ||
+                request.MaxAge != null
+                && result.Properties?.IssuedUtc != null
+                && DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)
             )
             {
                 // If the client application requested promptless authentication,
@@ -95,17 +104,14 @@ namespace Accelist.AuthGateway.Controllers
 
             var principal = new ClaimsPrincipal(identity);
 
-            principal.SetScopes(new[]
-            {
-                Scopes.OfflineAccess,
-                Scopes.OpenId,
-                Scopes.Address,
-                Scopes.Email,
-                Scopes.Phone,
-                Scopes.Profile,
-                "identity-management",
-                "app"
-            }.Intersect(request.GetScopes()));
+            var scopes = await ScopeManager
+                .ListAsync()
+                .SelectAwait(Q => ScopeManager.GetNameAsync(Q))
+                .Where(Q => Q != null)
+                .Select(Q => Q!)
+                .ToListAsync();
+
+            principal.SetScopes(scopes.Intersect(request.GetScopes()));
 
             foreach (var claim in identity.Claims)
             {
