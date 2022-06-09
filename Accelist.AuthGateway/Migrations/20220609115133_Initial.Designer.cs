@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Accelist.AuthGateway.Migrations
 {
     [DbContext(typeof(AuthDbContext))]
-    [Migration("20220609070801_Initial")]
+    [Migration("20220609115133_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,9 +27,6 @@ namespace Accelist.AuthGateway.Migrations
                     b.Property<bool>("IsValid")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("LoginClaimsID")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("ReturnUrl")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -38,8 +35,6 @@ namespace Accelist.AuthGateway.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("LoginChallengeID");
-
-                    b.HasIndex("LoginClaimsID");
 
                     b.ToTable("LoginChallenge");
                 });
@@ -74,6 +69,10 @@ namespace Accelist.AuthGateway.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Locale")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LoginChallengeID")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MiddleName")
@@ -120,6 +119,8 @@ namespace Accelist.AuthGateway.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("LoginClaimsID");
+
+                    b.HasIndex("LoginChallengeID");
 
                     b.ToTable("LoginClaims");
                 });
@@ -322,13 +323,15 @@ namespace Accelist.AuthGateway.Migrations
                     b.ToTable("OpenIddictTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Accelist.AuthGateway.Entities.LoginChallenge", b =>
+            modelBuilder.Entity("Accelist.AuthGateway.Entities.LoginClaims", b =>
                 {
-                    b.HasOne("Accelist.AuthGateway.Entities.LoginClaims", "LoginClaims")
-                        .WithMany("LoginChallenges")
-                        .HasForeignKey("LoginClaimsID");
+                    b.HasOne("Accelist.AuthGateway.Entities.LoginChallenge", "LoginChallenge")
+                        .WithMany("LoginClaims")
+                        .HasForeignKey("LoginChallengeID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Navigation("LoginClaims");
+                    b.Navigation("LoginChallenge");
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreAuthorization", b =>
@@ -355,9 +358,9 @@ namespace Accelist.AuthGateway.Migrations
                     b.Navigation("Authorization");
                 });
 
-            modelBuilder.Entity("Accelist.AuthGateway.Entities.LoginClaims", b =>
+            modelBuilder.Entity("Accelist.AuthGateway.Entities.LoginChallenge", b =>
                 {
-                    b.Navigation("LoginChallenges");
+                    b.Navigation("LoginClaims");
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>

@@ -10,37 +10,17 @@ namespace Accelist.AuthGateway.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "LoginClaims",
+                name: "LoginChallenge",
                 columns: table => new
                 {
-                    LoginClaimsID = table.Column<string>(type: "TEXT", nullable: false),
+                    LoginChallengeID = table.Column<string>(type: "TEXT", nullable: false),
                     IsValid = table.Column<bool>(type: "INTEGER", nullable: false),
                     ValidUntil = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Address = table.Column<string>(type: "TEXT", nullable: true),
-                    Birthdate = table.Column<DateOnly>(type: "TEXT", nullable: true),
-                    Email = table.Column<string>(type: "TEXT", nullable: true),
-                    EmailVerified = table.Column<bool>(type: "INTEGER", nullable: true),
-                    FamilyName = table.Column<string>(type: "TEXT", nullable: true),
-                    Gender = table.Column<string>(type: "TEXT", nullable: true),
-                    GivenName = table.Column<string>(type: "TEXT", nullable: true),
-                    Locale = table.Column<string>(type: "TEXT", nullable: true),
-                    MiddleName = table.Column<string>(type: "TEXT", nullable: true),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    Nickname = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberVerified = table.Column<bool>(type: "INTEGER", nullable: true),
-                    Picture = table.Column<string>(type: "TEXT", nullable: true),
-                    PreferredUsername = table.Column<string>(type: "TEXT", nullable: true),
-                    Profile = table.Column<string>(type: "TEXT", nullable: true),
-                    Subject = table.Column<string>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Website = table.Column<string>(type: "TEXT", nullable: true),
-                    ZoneInfo = table.Column<string>(type: "TEXT", nullable: true),
-                    RememberMe = table.Column<bool>(type: "INTEGER", nullable: false)
+                    ReturnUrl = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LoginClaims", x => x.LoginClaimsID);
+                    table.PrimaryKey("PK_LoginChallenge", x => x.LoginChallengeID);
                 });
 
             migrationBuilder.CreateTable(
@@ -86,23 +66,44 @@ namespace Accelist.AuthGateway.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "LoginChallenge",
+                name: "LoginClaims",
                 columns: table => new
                 {
-                    LoginChallengeID = table.Column<string>(type: "TEXT", nullable: false),
+                    LoginClaimsID = table.Column<string>(type: "TEXT", nullable: false),
                     IsValid = table.Column<bool>(type: "INTEGER", nullable: false),
                     ValidUntil = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LoginClaimsID = table.Column<string>(type: "TEXT", nullable: true),
-                    ReturnUrl = table.Column<string>(type: "TEXT", nullable: false)
+                    Address = table.Column<string>(type: "TEXT", nullable: true),
+                    Birthdate = table.Column<DateOnly>(type: "TEXT", nullable: true),
+                    Email = table.Column<string>(type: "TEXT", nullable: true),
+                    EmailVerified = table.Column<bool>(type: "INTEGER", nullable: true),
+                    FamilyName = table.Column<string>(type: "TEXT", nullable: true),
+                    Gender = table.Column<string>(type: "TEXT", nullable: true),
+                    GivenName = table.Column<string>(type: "TEXT", nullable: true),
+                    Locale = table.Column<string>(type: "TEXT", nullable: true),
+                    MiddleName = table.Column<string>(type: "TEXT", nullable: true),
+                    Name = table.Column<string>(type: "TEXT", nullable: true),
+                    Nickname = table.Column<string>(type: "TEXT", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
+                    PhoneNumberVerified = table.Column<bool>(type: "INTEGER", nullable: true),
+                    Picture = table.Column<string>(type: "TEXT", nullable: true),
+                    PreferredUsername = table.Column<string>(type: "TEXT", nullable: true),
+                    Profile = table.Column<string>(type: "TEXT", nullable: true),
+                    Subject = table.Column<string>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Website = table.Column<string>(type: "TEXT", nullable: true),
+                    ZoneInfo = table.Column<string>(type: "TEXT", nullable: true),
+                    RememberMe = table.Column<bool>(type: "INTEGER", nullable: false),
+                    LoginChallengeID = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_LoginChallenge", x => x.LoginChallengeID);
+                    table.PrimaryKey("PK_LoginClaims", x => x.LoginClaimsID);
                     table.ForeignKey(
-                        name: "FK_LoginChallenge_LoginClaims_LoginClaimsID",
-                        column: x => x.LoginClaimsID,
-                        principalTable: "LoginClaims",
-                        principalColumn: "LoginClaimsID");
+                        name: "FK_LoginClaims_LoginChallenge_LoginChallengeID",
+                        column: x => x.LoginChallengeID,
+                        principalTable: "LoginChallenge",
+                        principalColumn: "LoginChallengeID",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -163,9 +164,9 @@ namespace Accelist.AuthGateway.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_LoginChallenge_LoginClaimsID",
-                table: "LoginChallenge",
-                column: "LoginClaimsID");
+                name: "IX_LoginClaims_LoginChallengeID",
+                table: "LoginClaims",
+                column: "LoginChallengeID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OpenIddictApplications_ClientId",
@@ -204,7 +205,7 @@ namespace Accelist.AuthGateway.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "LoginChallenge");
+                name: "LoginClaims");
 
             migrationBuilder.DropTable(
                 name: "OpenIddictScopes");
@@ -213,7 +214,7 @@ namespace Accelist.AuthGateway.Migrations
                 name: "OpenIddictTokens");
 
             migrationBuilder.DropTable(
-                name: "LoginClaims");
+                name: "LoginChallenge");
 
             migrationBuilder.DropTable(
                 name: "OpenIddictAuthorizations");

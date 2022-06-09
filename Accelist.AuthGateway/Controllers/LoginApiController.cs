@@ -78,16 +78,16 @@ namespace Accelist.AuthGateway.Controllers
         [HttpPost]
         public async Task<ActionResult<LoginApiResponseModel>> Post([FromBody] LoginApiRequestModel model, CancellationToken cancellationToken)
         {
-            var now = DateTime.UtcNow;
             var challenge = await DB.LoginChallenge.Where(Q =>
                 Q.LoginChallengeID == model.LoginChallenge
                 && Q.IsValid
-                && Q.ValidUntil > now
+                && Q.ValidUntil > DateTime.UtcNow
             ).FirstOrDefaultAsync(cancellationToken);
 
             if (challenge == null)
             {
                 ModelState.AddModelError("model.LoginChallenge", "Invalid login challenge!");
+                return ValidationProblem(ModelState);
             }
 
             if (ModelState.IsValid == false)
@@ -122,16 +122,11 @@ namespace Accelist.AuthGateway.Controllers
                 UpdatedAt = model.UpdatedAt,
                 Website = model.Website,
                 ZoneInfo = model.ZoneInfo,
+                LoginChallengeID = challenge.LoginChallengeID
             };
 
             DB.LoginClaims.Add(claims);
-
-            if (challenge != null)
-            {
-                challenge.IsValid = false;
-                challenge.LoginClaimsID = claims.LoginClaimsID;
-            }
-
+            challenge.IsValid = false;
             await DB.SaveChangesAsync(cancellationToken);
 
             return new LoginApiResponseModel

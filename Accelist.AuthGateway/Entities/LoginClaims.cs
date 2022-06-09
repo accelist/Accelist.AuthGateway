@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Accelist.AuthGateway.Entities
 {
@@ -53,6 +54,9 @@ namespace Accelist.AuthGateway.Entities
 
         public bool RememberMe { set; get; }
 
-        public List<LoginChallenge> LoginChallenges { set; get; } = null!;
+        [ForeignKey(nameof(LoginChallenge))]
+        public string LoginChallengeID { set; get; } = "";
+
+        public LoginChallenge LoginChallenge { set; get; } = null!;
     }
 }

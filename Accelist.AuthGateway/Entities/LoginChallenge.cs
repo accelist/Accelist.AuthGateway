@@ -12,10 +12,7 @@ namespace Accelist.AuthGateway.Entities
 
         public DateTime ValidUntil { set; get; }
 
-        [ForeignKey(nameof(LoginClaims))]
-        public string? LoginClaimsID { set; get; }
-
-        public LoginClaims? LoginClaims { set; get; }
+        public List<LoginClaims> LoginClaims { set; get; } = null!;
 
         public string ReturnUrl { set; get; } = "";
     }

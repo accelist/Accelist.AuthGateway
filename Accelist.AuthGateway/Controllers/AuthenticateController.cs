@@ -30,8 +30,8 @@ namespace Accelist.AuthGateway.Controllers
             var userInfo = await DB.LoginClaims.Where(Q =>
                 Q.LoginClaimsID == login_claims
                 && Q.IsValid
-                && DateTimeOffset.UtcNow < Q.ValidUntil)
-                .Include(Q => Q.LoginChallenges)
+                && Q.ValidUntil > DateTime.UtcNow)
+                .Include(Q => Q.LoginChallenge)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (userInfo == null)
@@ -131,12 +131,10 @@ namespace Accelist.AuthGateway.Controllers
             userInfo.IsValid = false;
             await DB.SaveChangesAsync(cancellationToken);
 
-            var challenge = userInfo.LoginChallenges.First();
-            
             return SignIn(principal, new AuthenticationProperties
             {
                 IsPersistent = userInfo.RememberMe,
-                RedirectUri = challenge.ReturnUrl
+                RedirectUri = userInfo.LoginChallenge.ReturnUrl
             });
         }
     }
