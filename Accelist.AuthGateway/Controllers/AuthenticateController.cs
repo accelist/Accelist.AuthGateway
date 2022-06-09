@@ -131,11 +131,12 @@ namespace Accelist.AuthGateway.Controllers
             userInfo.IsValid = false;
             await DB.SaveChangesAsync(cancellationToken);
 
-            return SignIn(principal, new AuthenticationProperties
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
             {
-                IsPersistent = userInfo.RememberMe,
-                RedirectUri = userInfo.LoginChallenge.ReturnUrl
+                IsPersistent = userInfo.RememberMe
             });
+
+            return Redirect(userInfo.LoginChallenge.ReturnUrl);
         }
     }
 }

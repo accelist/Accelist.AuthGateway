@@ -1,4 +1,5 @@
 ﻿using Accelist.AuthGateway.Entities;
+using Accelist.AuthGateway.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -69,10 +70,12 @@ namespace Accelist.AuthGateway.Controllers
     public class LoginApiController : ControllerBase
     {
         private readonly AuthDbContext DB;
+        private readonly AuthGatewaySettings Settings;
 
-        public LoginApiController(AuthDbContext authDbContext)
+        public LoginApiController(AuthDbContext authDbContext, AuthGatewaySettings settings)
         {
             this.DB = authDbContext;
+            this.Settings = settings;
         }
 
         [HttpPost]
@@ -131,7 +134,7 @@ namespace Accelist.AuthGateway.Controllers
 
             return new LoginApiResponseModel
             {
-                RedirectTo = Request.PathBase + $"/authenticate?login_claims={claims.LoginClaimsID}"
+                RedirectTo = Settings.ServerBaseUri + $"/authenticate?login_claims={claims.LoginClaimsID}"
             };
         }
     }
