@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore;
+﻿using Accelist.AuthGateway.Services;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -104,14 +105,17 @@ namespace Accelist.AuthGateway.Controllers.Connect
 
             var principal = new ClaimsPrincipal(identity);
 
+            // Scopes = (Default OpenID Scopes u Custom App Scopes) n User Requested Scopes
             var scopes = await ScopeManager
                 .ListAsync()
                 .SelectAwait(Q => ScopeManager.GetNameAsync(Q))
                 .Where(Q => Q != null)
                 .Select(Q => Q!)
+                .Union(OpenIdSettings.Scopes.ToAsyncEnumerable())
+                .Intersect(request.GetScopes().ToAsyncEnumerable())
                 .ToListAsync();
 
-            principal.SetScopes(scopes.Intersect(request.GetScopes()));
+            principal.SetScopes(scopes);
 
             foreach (var claim in identity.Claims)
             {

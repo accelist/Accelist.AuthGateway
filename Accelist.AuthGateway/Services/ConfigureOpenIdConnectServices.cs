@@ -59,10 +59,10 @@ namespace Accelist.AuthGateway.Services
                 .AddServer(options =>
                 {
                     // Enable the authorization, token, introspection and userinfo endpoints.
-                    options.SetAuthorizationEndpointUris(configuration["OpenID:Endpoints:Authorization"])
-                           .SetTokenEndpointUris(configuration["OpenID:Endpoints:Token"])
-                           .SetIntrospectionEndpointUris(configuration["OpenID:Endpoints:Introspection"])
-                           .SetUserinfoEndpointUris(configuration["OpenID:Endpoints:Userinfo"]);
+                    options.SetAuthorizationEndpointUris(OpenIdSettings.Endpoints.Authorization)
+                           .SetTokenEndpointUris(OpenIdSettings.Endpoints.Token)
+                           .SetIntrospectionEndpointUris(OpenIdSettings.Endpoints.Introspection)
+                           .SetUserinfoEndpointUris(OpenIdSettings.Endpoints.Userinfo);
 
                     // Enable the client credentials flow for machine to machine auth.
                     options.AllowClientCredentialsFlow();
@@ -71,10 +71,10 @@ namespace Accelist.AuthGateway.Services
                     options.AllowRefreshTokenFlow();
 
                     // Expose all the supported claims in the discovery document.
-                    options.RegisterClaims(configuration.GetSection("OpenID:Claims").Get<string[]>());
+                    options.RegisterClaims(OpenIdSettings.Claims);
 
                     // Expose all the supported scopes in the discovery document.
-                    options.RegisterScopes(configuration.GetSection("OpenID:Scopes").Get<string[]>());
+                    options.RegisterScopes(OpenIdSettings.Scopes);
 
                     // Register the signing and encryption credentials.
                     options.AddEphemeralEncryptionKey()
@@ -88,48 +88,7 @@ namespace Accelist.AuthGateway.Services
 
                     // Register the event handler responsible for populating userinfo responses.
                     options.AddEventHandler<HandleUserinfoRequestContext>(options =>
-                        options.UseInlineHandler(context =>
-                        {
-                            if (context.Principal == null)
-                            {
-                                return default;
-                            }
-
-                            if (context.Principal.HasScope(Scopes.Profile))
-                            {
-                                context.GivenName = context.Principal.GetClaim(Claims.GivenName);
-                                context.FamilyName = context.Principal.GetClaim(Claims.FamilyName);
-                                context.BirthDate = context.Principal.GetClaim(Claims.Birthdate);
-                                context.Profile = context.Principal.GetClaim(Claims.Profile);
-                                context.PreferredUsername = context.Principal.GetClaim(Claims.PreferredUsername);
-                                context.Website = context.Principal.GetClaim(Claims.Website);
-
-                                context.Claims[Claims.Name] = context.Principal.GetClaim(Claims.Name);
-                                context.Claims[Claims.Gender] = context.Principal.GetClaim(Claims.Gender);
-                                context.Claims[Claims.MiddleName] = context.Principal.GetClaim(Claims.MiddleName);
-                                context.Claims[Claims.Nickname] = context.Principal.GetClaim(Claims.Nickname);
-                                context.Claims[Claims.Picture] = context.Principal.GetClaim(Claims.Picture);
-                                context.Claims[Claims.Locale] = context.Principal.GetClaim(Claims.Locale);
-                                context.Claims[Claims.Zoneinfo] = context.Principal.GetClaim(Claims.Zoneinfo);
-                                context.Claims[Claims.UpdatedAt] = long.Parse(
-                                    context.Principal.GetClaim(Claims.UpdatedAt) ?? "0",
-                                    NumberStyles.Number, CultureInfo.InvariantCulture);
-                            }
-
-                            if (context.Principal.HasScope(Scopes.Email))
-                            {
-                                context.Email = context.Principal.GetClaim(Claims.Email);
-                                context.EmailVerified = bool.Parse(context.Principal.GetClaim(Claims.EmailVerified) ?? "false");
-                            }
-
-                            if (context.Principal.HasScope(Scopes.Phone))
-                            {
-                                context.PhoneNumber = context.Principal.GetClaim(Claims.PhoneNumber);
-                                context.PhoneNumberVerified = bool.Parse(context.Principal.GetClaim(Claims.PhoneNumberVerified) ?? "false");
-                            }
-
-                            return default;
-                        })
+                        options.UseSingletonHandler<OpenIddictServerHandlers.PopulateUserinfo>()
                     );
                 })
 
